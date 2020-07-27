@@ -1,0 +1,161 @@
+
+What is Vertx?
+
+ Vert.x is a tool-kit to build
+       functional style,
+       non blocking or async,
+       poly glot,
+       Event driven,
+       Reactive, 
+            Distributed Application(MicroService) on 
+                       JVM
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+Non Blocking and Async Programming:
+..................................
+
+Process
+  Program in execution
+    Program is collection of instructions
+     instrction is collection of statements and expressions. 
+       statement
+               declarations - int a =10;
+               expression s =  a+b , hello(),new Hello()
+
+Memory
+  Main memory - RAM
+  Secondary  - DISK
+
+Processor
+  Where instructions and expressions are evaulated
+  Processor gets expressions and declaration from main memory /processor registers.
+
+Programs
+  -passive
+       which is not IN RAM / or /Program which is not accessed by CPU.
+  -active
+      Which is ram and excuted by CPU.
+        -Process.
+
+Runtime /Execution Engine/Machine:
+..................................
+
+   Container Active Programm, which acts as bridge between app and os.
+
+Every pl , has its own runtime - java
+ - JVM.
+
+any thing inside ram- will have structure : Process layout 
+
+Heap:
+  The ds for allocating dynamic memory .
+
+Stack:
+  The ds for  allocating dynamic memory.
+
+Program data;
+
+ it is ds for passive programs of running application.
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+Concurrency:
+  Doing many thing, at the same time.
+
+ -1960 ken thomson- MULTICS : MANY ACTIVE PROGRAMS ON CPU AT THE SAME.
+   -UNICS - UNIX
+-YOU CAN RUN MANY PROCESS AT THE SAME TIME - BY USING TIME SHARING ALRGORITHM.
+ -MULTI PROCESS.
+
+WE CANT RUN MORE PROCESS AT THE SAME TIME - VERY LIMIMED MEMORY.
+
+SUBPROCESS : thread of execution.
+  -to execute parrell tasks for given process
+ eg: 
+   printing,sending email,read data from database,talking to sockets
+
+mutlti thread :
+  on single , doing many concurrent tasks.
+
+Multi threading:
+
+1.each thread is created for spefici task.
+2.threads can communicate each other for data exchange.
+   eg:
+     IN Http, the HTTP Socket is waiting for pdf file to send to client
+
+Blocking and Sync Programming model:
+
+ 1.process need to create,allocate,execute, remove threads : life cycle of threads
+  
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+Types of Conncurrency:
+
+1.Process(jvm) level concurrency  :Blocking and Sync
+   - creates and manages life of threads.
+
+if more threads, process will suffer from
+ -performance
+ -dead lock
+ -race conditions
+......
+
+2.Worker thread level Concurrency: Nonblocking and async.
+
+
+
+Reactor Design Pattern:
+
+Reactor design pattern is used to build /design any non blocking/async architechure.
+
+
+Reactor Design pattern implementation:
+.....................................
+
+1.Node js - the most popular reference implmentation of reactor design pattern
+2.vertx
+3.nginx
+...........
+
+Vertx and Non blocking:
+.........................
+
+Vertx is multi core reactor design pattern
+  
+ multi -core -event loop.
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

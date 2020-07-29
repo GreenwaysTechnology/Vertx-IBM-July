@@ -1,0 +1,6 @@
+name: "UniSys Vertx Application"
+port: 3000
+host: "localhost"
+service: "hello"
+api : "/greet"
+

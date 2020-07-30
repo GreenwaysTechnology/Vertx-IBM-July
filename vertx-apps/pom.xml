@@ -18,7 +18,7 @@
 
     <vertx.version>3.9.2</vertx.version>
     <junit-jupiter.version>5.4.0</junit-jupiter.version>
-    <main.verticle>com.ibm.vertx.core.VertxInstanceCreationUsingAbstractVerticle</main.verticle>
+    <main.verticle>com.ibm.vertx.core.distributed.cluster.ClusterManagerApp</main.verticle>
 
   </properties>
 
@@ -40,6 +40,46 @@
       <artifactId>vertx-web</artifactId>
     </dependency>
     <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>2.0.0-alpha1</version>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-mongo-client</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-jdbc-client</artifactId>
+      <version>3.9.1</version>
+    </dependency>
+
+    <dependency>
+      <groupId>com.github.rjeschke</groupId>
+      <artifactId>txtmark</artifactId>
+      <version>0.13</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.hsqldb</groupId>
+      <artifactId>hsqldb</artifactId>
+      <version>2.5.0</version>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-web-templ-freemarker</artifactId>
+    </dependency>
+
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-hazelcast</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-config</artifactId>
+    </dependency>
+    <dependency>
       <groupId>io.vertx</groupId>
       <artifactId>vertx-junit5</artifactId>
       <scope>test</scope>
@@ -56,17 +96,11 @@
       <version>${junit-jupiter.version}</version>
       <scope>test</scope>
     </dependency>
-      <dependency>
-          <groupId>org.slf4j</groupId>
-          <artifactId>slf4j-api</artifactId>
-          <version>2.0.0-alpha1</version>
-      </dependency>
-    <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-simple -->
-    <!-- https://mvnrepository.com/artifact/ch.qos.logback/logback-classic -->
+
     <dependency>
-      <groupId>ch.qos.logback</groupId>
-      <artifactId>logback-classic</artifactId>
-      <version>1.2.3</version>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-hazelcast</artifactId>
+      <version>3.9.0</version>
     </dependency>
 
 

@@ -2411,23 +2411,1165 @@ public class HttpServerWithOptions extends AbstractVerticle {
     });
   }
 }
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+HOW TO Write web agent program? - restTemplate in spring:
+.........................................................
+
+Verticle communications
+
+1.Event bus
+2.HTTP protocal
+
+Vertx provides two implementation.
+
+-from io.vertx.core.http
+-from webclient module
+
+
+Server Verticle :
+
+package com.ibm.vertx.core.http.communication;
+
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonObject;
+import io.vertx.example.util.Runner;
+
+class HttpServerVerticle extends AbstractVerticle {
+
+  private void startApp() {
+    //HttpServer options
+    HttpServerOptions options = new HttpServerOptions();
+    options.setPort(3001);
+    //create WebServer , Handle request  and Send Response
+
+    HttpServer server = vertx.createHttpServer(options);
+
+    //Handle Request
+    server.requestHandler(context -> {
+      //context is container object , having HttpResponse and HttpRequest.
+      HttpServerResponse response = context.response();
+      response.putHeader("content-type", "application/json");
+      JsonObject address = new JsonObject();
+      address.put("city", "coimbatore").put("street", "10th street").put("state", "Tamil Nadu");
+      JsonObject visitor = new JsonObject();
+      visitor.put("name", "subramanian").put("address", address);
+      //response.end("<h1>Hello Vertx Application</h1>");
+      response.end(visitor.encodePrettily());
+    });
+    server.listen(serverHandler -> {
+      if (serverHandler.succeeded()) {
+        System.out.println("Http Server is up and running");
+      } else {
+        System.out.println(serverHandler.cause().getMessage());
+      }
+    });
+
+  }
+
+  @Override
+  public void start() throws Exception {
+    super.start();
+    startApp();
+  }
+}
+
+
+public class ServerVerticle extends AbstractVerticle {
+  public static void main(String[] args) {
+    Runner.runExample(ServerVerticle.class);
+  }
+
+  @Override
+  public void start() throws Exception {
+    super.start();
+    vertx.deployVerticle(new HttpServerVerticle());
+  }
+}
+
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+HTTP Client Program:
+
+package com.ibm.vertx.core.http.communication;
+
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.http.HttpClient;
+import io.vertx.core.http.HttpClientOptions;
+import io.vertx.core.http.HttpMethod;
+import io.vertx.example.util.Runner;
+
+class ClientVerticle extends AbstractVerticle {
+
+  private void startRequest() {
+    HttpClientOptions options = new HttpClientOptions();
+    HttpClient client = vertx.createHttpClient(options);
+    client.request(HttpMethod.GET, 3001, "localhost", "/", res -> {
+      System.out.println("Status : " + res.statusCode());
+      //handle response /result
+      res.bodyHandler(payload -> {
+        System.out.println(payload);
+      });
+    }).end();
+
+  }
+
+  @Override
+  public void start() throws Exception {
+    super.start();
+    vertx.setTimer(1000, ar -> {
+      startRequest();
+    });
+  }
+}
+
+
+public class HttpClientVerticle extends AbstractVerticle {
+  public static void main(String[] args) {
+    Runner.runExample(HttpClientVerticle.class);
+  }
+
+  @Override
+  public void start() throws Exception {
+    super.start();
+    vertx.deployVerticle(new ClientVerticle());
+  }
+}
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+Problems with core httpServer:
+............................
+
+1.routers and uri mapping.
+
+/api/users - GET,POST,DELETE,PUT,
+
+  server.requestHandler(context -> {
+      //context is container object , having HttpResponse and HttpRequest.
+      HttpServerResponse response = context.response();
+      response.putHeader("content-type", "application/json");
+      JsonObject address = new JsonObject();
+      address.put("city", "coimbatore").put("street", "10th street").put("state", "Tamil Nadu");
+      JsonObject visitor = new JsonObject();
+      visitor.put("name", "subramanian").put("address", address);
+      //response.end("<h1>Hello Vertx Application</h1>");
+      response.end(visitor.encodePrettily());
+    });
+
+We need abstraction, vertx provides a module called web.
+
+
+Using Vert.x Web:
+
+<dependency>
+ <groupId>io.vertx</groupId>
+ <artifactId>vertx-web</artifactId>
+ <version>3.9.2</version>
+</dependency>
+
+Types of WebApps:
+.................
+1.Static web - 1989-1995
+2.Dynamic content generation web apps - 1996 - till date
+   -eg ; servlets,jsp,aspx,php- with templates- html is output
+3.Resource based web apps - 1999 - till date
+  -Webservice - xml based(soap) , Data independent based(REST)
+4.Single Page Web Apps - using javascript
+  -Frameworks-angular,react.....
+
+
+How to build non blocking RESTFull Web Services?
+
+Resource based web Application , where data is returned in different format.
+
+domain model
+
+Methods URL Patterns
+
+GET  /api/users/list
+POST /api/users
+GET  /api/users/1
+PUT  /api/users/1
+
+Can you build realtime REST Apps using core http module
+
+ Yes,but very complex
+
+Vertx Provides a module  - vertx-web
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+Web Module is not independant , just an extension to core vertx http.
+----------------------------------------------------------------------
+
+
+				     vertx-Web
+				         |
+					HTTP
 
 
 
+Routing:
+........
+To map urls with http methods
+
+ /api/greet   ------GET
+
+Rotuer
+Route
+RotuingContext
+  -HTTPServerRequest
+  -HttpServerReponse
+	
+
+
+package com.ibm.vertx.web;
+
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerOptions;
+import io.vertx.example.util.Runner;
+import io.vertx.ext.web.Router;
+
+class HelloController extends AbstractVerticle {
+
+  //ROUTER COnfiguration
+  public Router getHelloRouterConfig() {
+    Router router = Router.router(vertx);
+    //rest end point happing
+    router.get("/hello").handler(routingContext -> {
+      routingContext.response().end("Hello");
+    });
+    router.get("/helloagain").handler(routingContext -> {
+      routingContext.response().end("Hello Again");
+    });
+
+    return router;
+  }
+
+  @Override
+  public void start() throws Exception {
+    super.start();
+  }
+}
+
+class HaiController extends AbstractVerticle {
+
+  //ROUTER COnfiguration
+  public Router getHaiRouterConfig() {
+    Router router = Router.router(vertx);
+    //rest end point happing
+    router.get("/hai").handler(routingContext -> {
+      routingContext.response().end("Hai");
+    });
+    router.get("/haiagain").handler(routingContext -> {
+      routingContext.response().end("Hai Again");
+    });
+
+    return router;
+  }
+
+  @Override
+  public void start() throws Exception {
+    super.start();
+  }
+}
+
+public class WebApplication extends AbstractVerticle {
+
+  HttpServer server;
+  HttpServerOptions options;
+
+  public static void main(String[] args) {
+    Runner.runExample(WebApplication.class);
+  }
+
+  public void StartApp() {
+    options = new HttpServerOptions().setPort(3001).setHost("localhost");
+    server = vertx.createHttpServer(options);
+
+    //Router Registeration
+    Router appRouter = Router.router(vertx);
+    //bind urls
+    appRouter.mountSubRouter("/api/helloapp", new HelloController().getHelloRouterConfig());
+    appRouter.mountSubRouter("/api/haiapp", new HaiController().getHaiRouterConfig());
+
+    //route all http requests
+    server.requestHandler(appRouter);
+
+
+    //start
+    server.listen(server -> {
+      if (server.succeeded()) {
+        System.out.println("REST Api Server is Ready!");
+      }
+    });
+  }
+
+  @Override
+  public void start() throws Exception {
+    super.start();
+    vertx.deployVerticle(new HelloController());
+    vertx.deployVerticle(new HaiController());
+    StartApp();
+  }
+}
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+Data base integration :
+
+ In vertx everthing is non blocking.
+
+SQL -oracle,sqlserver,mssql- jdbc
+NOSQL-Mongo
 
 
 
+MongoDB :
+
+A Vert.x client allowing applications to interact with a MongoDB instance, whether that’s saving, retrieving, searching, or deleting documents. Mongo is a great match for persisting data in a Vert.x application as it natively handles JSON (BSON) documents.
+
+Features
+
+-Completely non-blocking
+
+-Custom codec to support fast serialization to/from Vert.x JSON
+
+-Supports a majority of the configuration options from the MongoDB Java Driver
+
+<dependency>
+ <groupId>io.vertx</groupId>
+ <artifactId>vertx-mongo-client</artifactId>
+ <version>3.9.2</version>
+</dependency>
+
+
+package com.ibm.vertx.web.data;
+
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.http.HttpHeaders;
+import io.vertx.core.http.HttpServer;
+import io.vertx.core.http.HttpServerOptions;
+import io.vertx.core.json.JsonArray;
+import io.vertx.core.json.JsonObject;
+import io.vertx.example.util.Runner;
+import io.vertx.ext.mongo.MongoClient;
+import io.vertx.ext.web.Router;
+
+class BooksRepository extends AbstractVerticle {
+  MongoClient mongoClient;
+
+  public BooksRepository() {
+  }
+
+  public BooksRepository(MongoClient mongoClient) {
+    this.mongoClient = mongoClient;
+  }
+
+  //biz api :return records via promise
+  public Future<String> findAll() {
+    Promise promise = Promise.promise();
+    mongoClient.find("books", new JsonObject(), listAsyncResult -> {
+      if (listAsyncResult.succeeded()) {
+        //Store results in jsonArray
+        JsonArray documents = new JsonArray();
+        for (JsonObject document : listAsyncResult.result()) {
+          documents.add(document);
+        }
+        promise.complete(documents.encodePrettily());
+
+      } else {
+        promise.fail(listAsyncResult.cause().getMessage());
+      }
+    });
+
+
+    return promise.future();
+  }
+}
+
+class BooksController extends AbstractVerticle {
+
+  private BooksRepository bookRepository;
+
+  public BooksController() {
+  }
+
+  public BooksController(MongoClient mongoClient) {
+    bookRepository = new BooksRepository(mongoClient);
+  }
+
+  //booksRouter
+  public Router getBooksConfig() {
+    //sub Routers
+    Router router = Router.router(vertx);
+    //end points
+    router.get("/list").handler(ctx -> {
+
+      //talk to book repo class to get records async, once the result is ready,send to client
+      bookRepository.findAll().onComplete(ar -> {
+        //verify result
+        if (ar.succeeded()) {
+          //set Header content type
+          ctx.response().putHeader(HttpHeaders.CONTENT_TYPE, "application/json");
+          //flush the response
+          ctx.response().end(ar.result());
+        } else {
+          ctx.response().end("Sorry Somthing went Wrong!!!!");
+        }
+
+      });
+
+
+    });
+
+    return router;
+  }
+}
+
+
+public class WebAppMongo extends AbstractVerticle {
+
+  HttpServer server;
+  HttpServerOptions options;
+  MongoClient mongoClient;
+
+  public static void main(String[] args) {
+    Runner.runExample(WebAppMongo.class);
+  }
+
+  public void StartApp() {
+    options = new HttpServerOptions().setPort(3001).setHost("localhost");
+    server = vertx.createHttpServer(options);
+
+    //Mongo db connection
+
+    //connecting mongo db
+    mongoClient = MongoClient.createShared(vertx, new JsonObject().put("db_name", "booksdb"));
+    BooksController booksController = new BooksController(mongoClient);
+
+
+    //Router Registeration
+    Router appRouter = Router.router(vertx);
+    //bind urls
+    appRouter.mountSubRouter("/api/books", booksController.getBooksConfig());
+    //route all http requests
+    server.requestHandler(appRouter);
+
+
+    //start
+    server.listen(server -> {
+      if (server.succeeded()) {
+        System.out.println("REST Api Server is Ready!");
+      }
+    });
+  }
+
+  @Override
+  public void start() throws Exception {
+    super.start();
+    StartApp();
+  }
+}
+
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+JDBC,SQL,Templates: Dynamic web Application:
+.............................................
+
+
+FreeMarker template Engine
+JDBC - HSQL DB
+vertx-Web - routing
+
+Depedencies
+<dependency>
+ <groupId>io.vertx</groupId>
+ <artifactId>vertx-jdbc-client</artifactId>
+ <version>3.9.1</version>
+</dependency>
+
+    <dependency>
+      <groupId>com.github.rjeschke</groupId>
+      <artifactId>txtmark</artifactId>
+      <version>0.13</version>
+    </dependency>
+
+   <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-api</artifactId>
+      <version>2.0.0-alpha1</version>
+    </dependency>
+    <dependency>
+      <groupId>org.hsqldb</groupId>
+      <artifactId>hsqldb</artifactId>
+      <version>2.5.0</version>
+    </dependency>
+ <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-web-templ-freemarker</artifactId>
+    </dependency>
+
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+veticle start method with promise overloaded version :
+
+Database
+WebServer
+
+start(Promise promise)
+ deploy ----start completion ensures, that deployment is over
+ inside start, you are initalizing some non blocking resources, starting db,populating data
+ staring http servers which may be waiting for some resources
+
+what if start has completed, but still http or db not ready, then it will create inconsistency
+
+dont confirm the start method completion until, all resources are initalized.
+
+use start overloaded promise version.
+
+RoutingContext : Container Object in vertx which contains Request and Response.
+    -can be used to exchange
+  contex.put("key","value")
+ -ServletContext: 
+      - used to exchange data between servlets
+    put("key","value")
+
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+Basic Templates:
+
+package com.ibm.vertx.web.data;
+
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Future;
+import io.vertx.core.Promise;
+import io.vertx.core.http.HttpServer;
+import io.vertx.core.json.JsonObject;
+import io.vertx.example.util.Runner;
+import io.vertx.ext.jdbc.JDBCClient;
+import io.vertx.ext.sql.SQLConnection;
+import io.vertx.ext.web.Router;
+import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.templ.freemarker.FreeMarkerTemplateEngine;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+class BlogVerticle extends AbstractVerticle {
+  //sql statements
+  private static final String SQL_CREATE_PAGES_TABLE = "create table if not exists Pages (Id integer identity primary key, Name varchar(255) unique, Content clob)";
+  private static final String SQL_GET_PAGE = "select Id, Content from Pages where Name = ?"; // <1>
+  private static final String SQL_CREATE_PAGE = "insert into Pages values (NULL, ?, ?)";
+  private static final String SQL_SAVE_PAGE = "update Pages set Content = ? where Id = ?";
+  private static final String SQL_ALL_PAGES = "select Name from Pages";
+  private static final String SQL_DELETE_PAGE = "delete from Pages where Id = ?";
+  //Logger
+  private static final Logger LOGGER = LoggerFactory.getLogger(BlogVerticle.class);
+  //jdbc driver
+  private JDBCClient dbClient;
+  //Template Engine reference
+  private FreeMarkerTemplateEngine templateEngine;
+
+  //resource initalizatio apis : database,http server
+  //initialize the database and create initial table
+  private Future<Void> prepareDatabase() {
+    Promise<Void> promise = Promise.promise();
+    //connection information
+    dbClient = JDBCClient.createShared(vertx, new JsonObject()
+      .put("url", "jdbc:hsqldb:file:db/wiki")
+      .put("driver_class", "org.hsqldb.jdbcDriver")
+      .put("max_pool_size", 30));
+
+    //db inital setup
+    dbClient.getConnection(ar -> {
+      if (ar.failed()) {
+        LOGGER.error("Could not open a database connection", ar.cause());
+        promise.fail(ar.cause());
+
+      } else {
+        SQLConnection connection = ar.result();
+
+        connection.execute(SQL_CREATE_PAGES_TABLE, create -> {
+          connection.close();
+          if (create.failed()) {
+            LOGGER.error("Database preparation error", create.cause());
+            promise.fail(create.cause());
+          } else {
+            promise.complete();
+          }
+        });
+      }
+    });
+
+
+    return promise.future();
+  }
+
+  //to display home page
+  private void indexHandler(RoutingContext context) {
+
+    dbClient.getConnection(car -> {
+      if (car.succeeded()) {
+        SQLConnection connection = car.result();
+
+        connection.query(SQL_ALL_PAGES, res -> {
+          connection.close();
+
+          if (res.succeeded()) {
+            //java streams -replace with RX-JAVA improve performance
+            List<String> pages = res.result()
+              .getResults()
+              .stream()
+              .map(json -> json.getString(0))
+              .sorted()
+              .collect(Collectors.toList());
+
+            //this will be accessed inside Template
+            context.put("title", "IBM Wiki home");
+            context.put("pages", pages);
+
+            //Prepare Templates,convert into html(final output
+            templateEngine.render(context.data(), "templates/index.ftl", ar -> {   //
+              if (ar.succeeded()) {
+                context.response().putHeader("Content-Type", "text/html");
+                context.response().end(ar.result());
+              } else {
+                context.fail(ar.cause());
+              }
+            });
+
+          } else {
+            context.fail(res.cause());
+          }
+        });
+      } else {
+        context.fail(car.cause());
+      }
+    });
+  }
+
+  //starting http server
+  private Future<Void> startHttpServer() {
+    Promise<Void> promise = Promise.promise();
+
+    HttpServer server = vertx.createHttpServer();
+    Router router = Router.router(vertx);
+    //write all routes here , later we can isloate routers
+
+    router.get("/").handler(this::indexHandler);
+
+    templateEngine = FreeMarkerTemplateEngine.create(vertx);
+
+    server
+      .requestHandler(router)
+      .listen(3001, ar -> {
+        if (ar.succeeded()) {
+          LOGGER.info("HTTP server running on port 8080");
+          promise.complete();
+        } else {
+          LOGGER.error("Could not start a HTTP server", ar.cause());
+          promise.fail(ar.cause());
+        }
+      });
+
+    return promise.future();
+
+  }
+
+  @Override
+  public void start(Promise<Void> startPromise) throws Exception {
+    Future<Void> steps = prepareDatabase().compose(v -> startHttpServer());
+    //ensure here start now can complete
+    steps.onComplete(startPromise);
+  }
+}
+
+public class DynamicWebApp extends AbstractVerticle {
+
+  public static void main(String[] args) {
+    Runner.runExample(DynamicWebApp.class);
+  }
+
+  @Override
+  public void start() throws Exception {
+    vertx.deployVerticle(new BlogVerticle());
+  }
+}
+
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+Distributed Architecture: Microservices
+.......................................
+
+
+Verticle Communication:
+......................
+
+1.Within Process : 
+
+  Within single Vertx
+
+2.among Vertx
+
+
+Vertx - Clustering:
+...................
+
+Clustering , means organization application under one communication channel.
+
+Vertx uses integration/clustering technologies.
+
+Vertx uses hazelcast ClusterManager by default.
+
+
+How to enable clustering?
+
+In vertx clustering can be enabled in two ways
+
+1.through code
+
+Vertx Configuration;
+
+Types of vertx:
+1.standard vertx
+2.clusteredVertx
+
+Vertx.createClusteredVertx()
+
+
+2.through vertx command line
+
+  vertx program.java -cluster
 
 
 
+Steps for clustering:
+....................
+
+<dependency>
+      <groupId>com.hazelcast</groupId>
+      <artifactId>hazelcast</artifactId>
+      <version>3.12.2</version>
+</dependency>
+
+
+Cluster Configuration:
+
+two ways
+
+1.through code
+
+2.through configuration files
+ -hazelcast uses file  cluster.xml
+
+Create ClusteManager
+
+Config hazelcastConfig = new Config();
+
+// Now set some stuff on the config (omitted)
+
+ClusterManager mgr = new HazelcastClusterManager(hazelcastConfig);
+
+
+default configuration:
+
+ClusterManager mgr = new HazelcastClusterManager(hazelcastConfig);
+
+    ClusterManager mgr = new HazelcastClusterManager();
+    VertxOptions options = new VertxOptions().setClusterManager(mgr);
+    Vertx.clusteredVertx(options, vertxAsyncResult -> {
+      if (vertxAsyncResult.succeeded()) {
+
+       //deploy verticles on cluster env.
+        DeploymentOptions deploymentOptions = new DeploymentOptions();       
+        
+        vertxAsyncResult.result().deployVerticle("com.ibm.vertx.core.distributed.cluster.PublisherVerticle", deploymentOptions, res -> {
+          if (res.succeeded()) {
+            System.out.println("Deployment id is: " + res.result());
+          } else {
+            System.out.println("Deployment failed!");
+          }
+        });
+
+      } else {
+        System.out.println("Cluster up failed: " + vertxAsyncResult.cause());
+      }
+    });
+
+
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+Pubilsher:
+package com.ibm.vertx.core.distributed.cluster;
+
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
+import io.vertx.core.spi.cluster.ClusterManager;
+import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+
+public class PublisherVerticle extends AbstractVerticle {
+
+  public static void main(String[] args) {
+    ClusterManager mgr = new HazelcastClusterManager();
+    VertxOptions options = new VertxOptions().setClusterManager(mgr);
+    Vertx.clusteredVertx(options, vertxAsyncResult -> {
+      if (vertxAsyncResult.succeeded()) {
+
+       //deploy verticles on cluster env.
+        DeploymentOptions deploymentOptions = new DeploymentOptions();
+
+        vertxAsyncResult.result().deployVerticle("com.ibm.vertx.core.distributed.cluster.PublisherVerticle", deploymentOptions, res -> {
+          if (res.succeeded()) {
+            System.out.println("Deployment id is: " + res.result());
+          } else {
+            System.out.println("Deployment failed!");
+          }
+        });
+
+      } else {
+        System.out.println("Cluster up failed: " + vertxAsyncResult.cause());
+      }
+    });
+  }
+
+  @Override
+  public void start() throws Exception {
+    super.start();
+    RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
+    String jvmName = runtimeBean.getName();
+    // System.out.println("JVM Name = " + jvmName);
+    long pid = Long.valueOf(jvmName.split("@")[0]);
+    //System.out.println(Thread.currentThread().getName());
+    vertx.setPeriodic(5000, ar -> {
+      System.out.println("PID  = " + pid + " Thread = " + Thread.currentThread().getName());
+      //publish message
+      String news = "Last 24 hrs, 50000 covid patients in India" + " From  " + jvmName;
+      vertx.eventBus().publish("news.in.covid", news);
+    });
+  }
+}
+
+package com.ibm.vertx.core.distributed.cluster;
+
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.MessageConsumer;
+import io.vertx.core.spi.cluster.ClusterManager;
+import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;
+
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+
+public class SubscriberVerticle extends AbstractVerticle {
+
+  public static void main(String[] args) {
+    ClusterManager mgr = new HazelcastClusterManager();
+
+    VertxOptions options = new VertxOptions().setClusterManager(mgr);
+
+    Vertx.clusteredVertx(options, cluster -> {
+      if (cluster.succeeded()) {
+        DeploymentOptions deploymentOptions = new DeploymentOptions();
+         cluster.result().deployVerticle("com.ibm.vertx.core.distributed.cluster.SubscriberVerticle", deploymentOptions, res -> {
+          if (res.succeeded()) {
+            System.out.println("Deployment id is: " + res.result());
+          } else {
+            System.out.println("Deployment failed!");
+          }
+        });
+      } else {
+        System.out.println("Cluster up failed: " + cluster.cause());
+      }
+    });
+  }
+
+  private void consumeNews() {
+    EventBus eventBus = vertx.eventBus();
+    //Declare Consumer
+    MessageConsumer<String> consumer = eventBus.consumer("news.in.covid");
+    //handle/process the message/news
+    consumer.handler(news -> {
+      RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
+      String jvmName = runtimeBean.getName();
+      System.out.println("JVM Name = " + jvmName);
+      long pid = Long.valueOf(jvmName.split("@")[0]);
+      System.out.println("PID  = " + pid + " Thread = " + Thread.currentThread().getName());
+      System.out.println("News 7's Today News : " + news.body());
+    });
+
+  }
+
+  @Override
+  public void start() throws Exception {
+    super.start();
+    consumeNews();
+  }
+}
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+Load balancing and fail over: Scalability
+...............................................................................................
+
+what if the one verticle which was deployed down , due to various reasons.
+
+
+You set no of instances of same the verticle .
+
+Via Code
+
+DeploymentOptions deploymentOptions = new DeploymentOptions().setInstances(5);
+
+Note: No of instances can be set in cluster and non cluster mode
+
+
+via commandline
+
+vertx programname -cluster -instances=5
+
+
+Load Balancer: High Availablity:
+................................
+Via Code
+
+DeploymentOptions deploymentOptions = new DeploymentOptions().setInstances(5).setHA(true);
+
+   " Here i want to replicate 10 copies of Subscriber Verticle and also enables built in load balancer
+        //which scales automatically when verticles goes off.
+        DeploymentOptions deploymentOptions = new DeploymentOptions().setInstances(10).setHa(true);
+     "
 
 
 
+via commandline
+
+vertx programname -cluster -instances=5
+
+
+package com.ibm.vertx.core.distributed.cluster;
+
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Vertx;
+import io.vertx.core.VertxOptions;
+import io.vertx.core.eventbus.EventBus;
+import io.vertx.core.eventbus.MessageConsumer;
+import io.vertx.core.spi.cluster.ClusterManager;
+import io.vertx.spi.cluster.hazelcast.HazelcastClusterManager;
+
+import java.lang.management.ManagementFactory;
+import java.lang.management.RuntimeMXBean;
+
+public class SubscriberVerticle extends AbstractVerticle {
+
+  public static void main(String[] args) {
+    ClusterManager mgr = new HazelcastClusterManager();
+
+    VertxOptions options = new VertxOptions().setClusterManager(mgr);
+
+    Vertx.clusteredVertx(options, cluster -> {
+      if (cluster.succeeded()) {
+        //Here i want to replicate 10 copies of Subscriber Verticle and also enables built in load balancer
+        //which scales automatically when verticles goes off.
+        DeploymentOptions deploymentOptions = new DeploymentOptions().setInstances(10).setHa(true);
+
+         cluster.result().deployVerticle("com.ibm.vertx.core.distributed.cluster.SubscriberVerticle", deploymentOptions, res -> {
+          if (res.succeeded()) {
+            System.out.println("Deployment id is: " + res.result());
+          } else {
+            System.out.println("Deployment failed!");
+          }
+        });
+      } else {
+        System.out.println("Cluster up failed: " + cluster.cause());
+      }
+    });
+  }
+
+  private void consumeNews() {
+    EventBus eventBus = vertx.eventBus();
+    //Declare Consumer
+    MessageConsumer<String> consumer = eventBus.consumer("news.in.covid");
+    //handle/process the message/news
+    consumer.handler(news -> {
+      RuntimeMXBean runtimeBean = ManagementFactory.getRuntimeMXBean();
+      String jvmName = runtimeBean.getName();
+      System.out.println("JVM Name = " + jvmName);
+      long pid = Long.valueOf(jvmName.split("@")[0]);
+      System.out.println("PID  = " + pid + " Thread = " + Thread.currentThread().getName());
+      System.out.println("News 7's Today News : " + news.body());
+    });
+
+  }
+
+  @Override
+  public void start() throws Exception {
+    super.start();
+    consumeNews();
+  }
+}
+
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+package com.ibm.vertx.core.distributed.cluster;
+
+import io.vertx.core.AbstractVerticle;
+import io.vertx.core.http.HttpServer;
+
+
+public class HighAvailbilityApp extends AbstractVerticle {
+
+  @Override
+  public void start() {
+
+    HttpServer server = vertx.createHttpServer();
+
+    server.requestHandler(req -> {
+      long id = Thread.currentThread().getId();
+      req.response().end("<h1> I am coming from " + id + " Instance");
+    });
+
+    server.listen(8888, "localhost", handler -> {
+      if (handler.succeeded()) {
+        System.out.println("Server is Ready! " + Thread.currentThread().getId());
+      } else {
+        System.out.println("Server failed to Start");
+      }
+    });
+  }
+
+
+}
+&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&
+
+Distributed App Configuration: Centralized configuration system:
+
+Vert.x Config:
+
+This component provides an extensible way to configure Vert.x applications.
+
+
+Configuration Stores(Storage):
+..............................
+
+Physical storage:
+
+1.files
+2.directories -ldap....
+3.HTTP Servers - a separate HTTP server.
+4.Redis
+5.System Properties
+6.environment properties
+
+In memory Store: Application memory
+
+Configuration via JSON objects, can be kept at memory.
+
+
+Storage file formats:
+1.yaml
+2.json
+3.properties
+......
+
+Concepts:
+
+1.How to process / read configurations
+
+Vertx Provides non blocking Object
+
+1.ConfigRetriever:
+
+  It configures a set of configuration store, where Configuration store defines  a location
+from where the configuration data is read and also format(JSON by default).
+
+ The Result from ConfigServer is JSON object.
+
+Flow
+
+  Application ------------------|ConfigRetriver----|ConfigStore
+				JSON Object	<----	
+
+
+How to instantiate the ConfigRetriver:
+
+ ConfigRetriver retriver = ConfigRetriver.create(vertx).
+
+
+///////////////////////////////////////////////////////////////////////////////////////////
+
+ConfigRetiver Object can be used to read from physical storage and also in memory.
+
+AbstractVerticle has an api called
+
+public JsonObject config()
+Get the configuration of the verticle.
+This can be specified when the verticle is deployed.
+
+JSONObject config(); --this method interanally uses Builtin ConfigRetriver.
+
+ get("key","defaultValue") - to read values from the memory
+   get("message","Hello")
+ put("key",value) - to store configuration data to verticles /application
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////////
+
+/////////////////////////////////////////////////////////////////////////////////////////
+Order of config property retrival:
+
+get("SOMETHING")------> Verticle---Not----System Proptiers---->Env--->Store
+
+1.The vertx Verticle config()
+2.The system properties
+3.The environment variables
+4.From the store what you have configurated
+/////////////////////////////////////////////////////////////////////////////////////////
+
+Implemetation:
+
+1.Type of Store
+  ->ConfigStoreOptions
+
+2.Create ConfigRetriver Object with ConfigStore options
+
+
+   <dependency>
+       <groupId>io.vertx</groupId>
+       <artifactId>vertx-config-yaml</artifactId>
+    </dependency>
+
+     <dependency>
+      <groupId>io.vertx</groupId>
+      <artifactId>vertx-config</artifactId>
+    </dependency>
 
 
 
+1.create json file
 
-
+resources/application.json
+{
+  "application": {
+    "name": "Unisys Vertx Application",
+    "Version": "1.0.0",
+    "port": 3001
+  }
+}
 
 
 
